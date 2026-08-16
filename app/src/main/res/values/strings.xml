@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="access_desc">Reads the replies to carrier menus automatically so payments can finish without you typing them.</string>
+</resources>

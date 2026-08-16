@@ -35,10 +35,19 @@ fun App() = MaterialTheme(darkColorScheme(background = Bg, surface = Bg)) { Root
 
 @Composable
 private fun Root() {
+    // pehli baar onboarding, uske baad app
+    var onboarded by remember { mutableStateOf(false) }
+    val setup = remember { Setup() }
+    if (onboarded) Main(setup) else OnboardingScreen(setup) { onboarded = true }
+}
+
+@Composable
+private fun Main(s: Setup) {
     // stack ka last = current screen, first = kaun sa tab
     var stack by remember { mutableStateOf(listOf("home")) }
     val back = { stack = if (stack.size > 1) stack.dropLast(1) else listOf("home") }
     val go: (String) -> Unit = { stack = stack + it }
+    val home = { stack = listOf("home") }
     BackHandler(stack != listOf("home")) { back() }
 
     Scaffold(
@@ -46,16 +55,21 @@ private fun Root() {
         bottomBar = { BottomNav(stack.first()) { stack = listOf(it) } },
     ) { pad ->
         when (stack.last()) {
-            "settings" -> SettingsTab(pad)
-            "scan" -> ScanQrScreen(pad, back)
-            "bank" -> BankTransferScreen(pad, back)
-            "contact" -> PayViaContactScreen(pad, back)
-            "upi" -> PayViaUpiIdScreen(pad, back)
+            "settings" -> SettingsTab(pad, s, go)
+            "scan" -> ScanQrScreen(pad, back, go)
+            "bank" -> BankTransferScreen(pad, back, go)
+            "contact" -> PayViaContactScreen(pad, back, go)
+            "upi" -> PayViaUpiIdScreen(pad, back, go)
             "request" -> RequestMoneyScreen(pad, back)
             "history" -> HistoryScreen(pad, back)
-            "pending" -> PendingRequestsScreen(pad, back)
-            "pin" -> ChangeUpiPinScreen(pad, back)
+            "pending" -> PendingRequestsScreen(pad, back, go)
+            "pin" -> ChangeUpiPinScreen(pad, s, back)
             "saved" -> SavedRecipientsScreen(pad, back)
+            "banks" -> BankAccountsScreen(pad, s, back)
+            "sim" -> SimScreen(pad, s, back)
+            "confirm" -> PaymentConfirmScreen(pad, s, back, go)
+            "enterpin" -> UpiPinScreen(pad, s, back, go)
+            "done" -> PaymentStatusScreen(pad, home)
             else -> HomeTab(pad, go)
         }
     }
