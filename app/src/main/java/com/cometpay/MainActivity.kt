@@ -3,49 +3,24 @@ package com.cometpay
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.outlined.AccountBalance
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.PendingActions
-import androidx.compose.material.icons.outlined.ReceiptLong
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val Bg = Color(0xFF000000)
-private val CardBg = Color(0xFF121212)
-private val Line = Color(0xFF262626)
-private val IconBg = Color(0xFF1C1C1C)
-private val Muted = Color(0xFF8E8E8E)
+import com.cometpay.app.presentation.screens.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,152 +31,61 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun App() = MaterialTheme(darkColorScheme(background = Bg, surface = Bg)) { HomeScreen() }
+fun App() = MaterialTheme(darkColorScheme(background = Bg, surface = Bg)) { Root() }
 
 @Composable
-fun HomeScreen() {
-    var tab by remember { mutableIntStateOf(0) }
+private fun Root() {
+    // stack ka last = current screen, first = kaun sa tab
+    var stack by remember { mutableStateOf(listOf("home")) }
+    val back = { stack = if (stack.size > 1) stack.dropLast(1) else listOf("home") }
+    val go: (String) -> Unit = { stack = stack + it }
+    BackHandler(stack != listOf("home")) { back() }
+
     Scaffold(
         containerColor = Bg,
-        bottomBar = {
-            Column {
-                HorizontalDivider(color = Line)
-                NavigationBar(containerColor = Color(0xFF0A0A0A)) {
-                    listOf(
-                        Triple("Home", Icons.Filled.Home, 26.dp),
-                        Triple("Scan QR Code", Icons.Filled.QrCode, 34.dp),
-                        Triple("Settings", Icons.Outlined.Settings, 26.dp),
-                    ).forEachIndexed { i, (label, icon, sz) ->
-                            NavigationBarItem(
-                                selected = tab == i,
-                                onClick = { tab = i },
-                                icon = { Icon(icon, null, Modifier.size(sz)) },
-                                label = { Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.White,
-                                    selectedTextColor = Color.White,
-                                    unselectedIconColor = Muted,
-                                    unselectedTextColor = Muted,
-                                    indicatorColor = IconBg,
-                                ),
-                            )
-                        }
-                }
-            }
-        },
+        bottomBar = { BottomNav(stack.first()) { stack = listOf(it) } },
     ) { pad ->
-        Column(Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
-            Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                CometLogo()
-                Spacer(Modifier.width(10.dp))
-                Text("comet pay", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                Surface(
-                    onClick = {},
-                    shape = RoundedCornerShape(14.dp),
-                    color = CardBg,
-                    border = BorderStroke(1.dp, Line),
-                ) {
-                    Row(
-                        Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Outlined.History, null, Modifier.size(20.dp), Color.White)
-                        Spacer(Modifier.width(8.dp))
-                        Text("History", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(30.dp))
-            Text("Hello!", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Text("Welcome to Comet Pay", color = Muted, fontSize = 15.sp)
-            Spacer(Modifier.height(22.dp))
-            BalanceCard()
-            Spacer(Modifier.height(22.dp))
-
-            // null icon = UPI wala text logo
-            listOf(
-                Triple("Bank Transfer", "IFSC and Account", Icons.Outlined.AccountBalance),
-                Triple("Pay via Contact", "Pay using saved contacts", Icons.Filled.Person),
-                Triple("Pay via UPI ID", "Enter UPI ID and pay", null),
-                Triple("Request Money", "UPI ID or mobile", Icons.Outlined.Payments),
-                Triple("Transactions", "Last five bank", Icons.Outlined.ReceiptLong),
-                Triple("Pending Requests", "View incoming request", Icons.Outlined.PendingActions),
-                Triple("Change UPI PIN", "Update through your bank", Icons.Outlined.Lock),
-                Triple("Saved recipients", "Favorites", Icons.Outlined.StarBorder),
-            ).chunked(2).forEachIndexed { i, row ->
-                if (i > 0) Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    row.forEach { (title, sub, ic) ->
-                        ActionCard(title, sub) { if (ic == null) UpiLogo() else Glyph(ic) }
-                    }
-                }
-            }
-            Spacer(Modifier.height(20.dp))
+        when (stack.last()) {
+            "settings" -> SettingsTab(pad)
+            "scan" -> ScanQrScreen(pad, back)
+            "bank" -> BankTransferScreen(pad, back)
+            "contact" -> PayViaContactScreen(pad, back)
+            "upi" -> PayViaUpiIdScreen(pad, back)
+            "request" -> RequestMoneyScreen(pad, back)
+            "history" -> HistoryScreen(pad, back)
+            "pending" -> PendingRequestsScreen(pad, back)
+            "pin" -> ChangeUpiPinScreen(pad, back)
+            "saved" -> SavedRecipientsScreen(pad, back)
+            else -> HomeTab(pad, go)
         }
     }
 }
 
 @Composable
-private fun BalanceCard() = Surface(
-    onClick = {},
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(20.dp),
-    color = CardBg,
-    border = BorderStroke(1.dp, Line),
-) {
-    Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text("Available Balance", color = Muted, fontSize = 14.sp)
-            Spacer(Modifier.height(5.dp))
-            Text("₹ 17,380.00", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        }
-        // chhota retry button
-        Surface(onClick = {}, shape = CircleShape, color = IconBg) {
-            Icon(Icons.Outlined.Refresh, null, Modifier.padding(9.dp).size(20.dp), Color.White)
+private fun BottomNav(tab: String, onNav: (String) -> Unit) = Column {
+    HorizontalDivider(color = Line)
+    NavigationBar(containerColor = Color(0xFF0A0A0A)) {
+        listOf(
+            Triple("Home", Icons.Filled.Home, "home"),
+            Triple("Scan QR Code", Icons.Filled.QrCode, "scan"),
+            Triple("Settings", Icons.Outlined.Settings, "settings"),
+        ).forEach { (label, icon, route) ->
+            NavigationBarItem(
+                selected = tab == route,
+                onClick = { onNav(route) },
+                icon = { Icon(icon, null, Modifier.size(if (route == "scan") 34.dp else 26.dp)) },
+                label = { Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    selectedTextColor = Color.White,
+                    unselectedIconColor = Muted,
+                    unselectedTextColor = Muted,
+                    indicatorColor = IconBg,
+                ),
+            )
         }
     }
 }
-
-@Composable
-private fun RowScope.ActionCard(title: String, subtitle: String, icon: @Composable () -> Unit) = Surface(
-    onClick = {},
-    modifier = Modifier.weight(1f).aspectRatio(0.8f),
-    shape = RoundedCornerShape(20.dp),
-    color = CardBg,
-    border = BorderStroke(1.dp, Line),
-) {
-    Column(Modifier.padding(14.dp), Arrangement.Center, Alignment.CenterHorizontally) {
-        Box(Modifier.size(84.dp).background(IconBg, CircleShape), Alignment.Center) { icon() }
-        Spacer(Modifier.height(22.dp))
-        Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(7.dp))
-        Text(subtitle, color = Muted, fontSize = 13.sp, textAlign = TextAlign.Center, lineHeight = 17.sp)
-    }
-}
-
-@Composable
-private fun Glyph(icon: ImageVector) = Icon(icon, null, Modifier.size(42.dp), Color.White)
-
-// Comet logo kone me
-@Composable
-private fun CometLogo() = Canvas(Modifier.size(30.dp)) {
-    val w = size.width
-    drawLine(Color.White, Offset(w * .34f, w * .66f), Offset(w, 0f), w * .1f, StrokeCap.Round)
-    drawCircle(Color.White, w * .18f, Offset(w * .2f, w * .8f))
-}
-
-// UPI wala watermark 
-@Composable
-private fun UpiLogo() = Text(
-    "UPI",
-    color = Color.White,
-    fontSize = 24.sp,
-    fontWeight = FontWeight.Black,
-    fontStyle = FontStyle.Italic,
-)
 
 @Preview(showSystemUi = true)
 @Composable
