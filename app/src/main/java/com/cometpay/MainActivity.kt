@@ -9,17 +9,23 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.PendingActions
+import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -84,7 +90,7 @@ fun HomeScreen() {
             }
         },
     ) { pad ->
-        Column(Modifier.padding(pad).padding(horizontal = 20.dp)) {
+        Column(Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
             Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                 CometLogo()
                 Spacer(Modifier.width(10.dp))
@@ -115,15 +121,25 @@ fun HomeScreen() {
             BalanceCard()
             Spacer(Modifier.height(22.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                ActionCard("Bank Transfer", "IFSC and Account") { Glyph(Icons.Outlined.AccountBalance) }
-                ActionCard("Pay via Contact", "Pay using saved contacts") { Glyph(Icons.Filled.Person) }
+            // null icon = UPI wala text logo
+            listOf(
+                Triple("Bank Transfer", "IFSC and Account", Icons.Outlined.AccountBalance),
+                Triple("Pay via Contact", "Pay using saved contacts", Icons.Filled.Person),
+                Triple("Pay via UPI ID", "Enter UPI ID and pay", null),
+                Triple("Request Money", "UPI ID or mobile", Icons.Outlined.Payments),
+                Triple("Transactions", "Last five bank", Icons.Outlined.ReceiptLong),
+                Triple("Pending Requests", "View incoming request", Icons.Outlined.PendingActions),
+                Triple("Change UPI PIN", "Update through your bank", Icons.Outlined.Lock),
+                Triple("Saved recipients", "Favorites", Icons.Outlined.StarBorder),
+            ).chunked(2).forEachIndexed { i, row ->
+                if (i > 0) Spacer(Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    row.forEach { (title, sub, ic) ->
+                        ActionCard(title, sub) { if (ic == null) UpiLogo() else Glyph(ic) }
+                    }
+                }
             }
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                ActionCard("Pay via UPI ID", "Enter UPI ID and pay") { UpiLogo() }
-                ActionCard("Request Money", "UPI ID or mobile") { Glyph(Icons.Outlined.Payments) }
-            }
+            Spacer(Modifier.height(20.dp))
         }
     }
 }
