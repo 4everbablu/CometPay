@@ -15,8 +15,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -59,12 +61,15 @@ fun HomeScreen() {
             Column {
                 HorizontalDivider(color = Line)
                 NavigationBar(containerColor = Color(0xFF0A0A0A)) {
-                    listOf("Home" to Icons.Filled.Home, "Settings" to Icons.Outlined.Settings)
-                        .forEachIndexed { i, (label, icon) ->
+                    listOf(
+                        Triple("Home", Icons.Filled.Home, 26.dp),
+                        Triple("Scan QR Code", Icons.Filled.QrCode, 34.dp),
+                        Triple("Settings", Icons.Outlined.Settings, 26.dp),
+                    ).forEachIndexed { i, (label, icon, sz) ->
                             NavigationBarItem(
                                 selected = tab == i,
                                 onClick = { tab = i },
-                                icon = { Icon(icon, null, Modifier.size(26.dp)) },
+                                icon = { Icon(icon, null, Modifier.size(sz)) },
                                 label = { Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = Color.White,
@@ -102,21 +107,44 @@ fun HomeScreen() {
                 }
             }
 
-            Spacer(Modifier.height(44.dp))
+            Spacer(Modifier.height(30.dp))
             Text("Hello!", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(6.dp))
             Text("Welcome to Comet Pay", color = Muted, fontSize = 15.sp)
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(22.dp))
+            BalanceCard()
+            Spacer(Modifier.height(22.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                ActionCard("Scan QR Code", "Scan and pay instantly") { Glyph(Icons.Filled.QrCode) }
+                ActionCard("Bank Transfer", "IFSC and Account") { Glyph(Icons.Outlined.AccountBalance) }
                 ActionCard("Pay via Contact", "Pay using saved contacts") { Glyph(Icons.Filled.Person) }
             }
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 ActionCard("Pay via UPI ID", "Enter UPI ID and pay") { UpiLogo() }
-                ActionCard("Check Balance", "View your account balance") { Glyph(Icons.Outlined.AccountBalanceWallet) }
+                ActionCard("Request Money", "UPI ID or mobile") { Glyph(Icons.Outlined.Payments) }
             }
+        }
+    }
+}
+
+@Composable
+private fun BalanceCard() = Surface(
+    onClick = {},
+    modifier = Modifier.fillMaxWidth(),
+    shape = RoundedCornerShape(20.dp),
+    color = CardBg,
+    border = BorderStroke(1.dp, Line),
+) {
+    Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Available Balance", color = Muted, fontSize = 14.sp)
+            Spacer(Modifier.height(5.dp))
+            Text("₹ 17,380.00", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        }
+        // chhota retry button
+        Surface(onClick = {}, shape = CircleShape, color = IconBg) {
+            Icon(Icons.Outlined.Refresh, null, Modifier.padding(9.dp).size(20.dp), Color.White)
         }
     }
 }
