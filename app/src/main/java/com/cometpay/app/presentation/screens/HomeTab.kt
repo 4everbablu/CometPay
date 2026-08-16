@@ -29,17 +29,17 @@ private data class Tile(val t: String, val s: String, val ic: ImageVector?, val 
 
 private val tiles = listOf(
     Tile("Bank Transfer", "IFSC and Account", Icons.Outlined.AccountBalance, "bank"),
-    Tile("Pay via Contact", "Pay using saved contacts", Icons.Filled.Person, "contact"),
+    Tile("Pay via Contact", "Pay using mobile number", Icons.Filled.Person, "contact"),
     Tile("Pay via UPI ID", "Enter UPI ID and pay", null, "upi"),
     Tile("Request Money", "UPI ID or mobile", Icons.Outlined.Payments, "request"),
-    Tile("Transactions", "Last five bank", Icons.AutoMirrored.Outlined.ReceiptLong, "history"),
+    Tile("Transactions", "Last five bank", Icons.AutoMirrored.Outlined.ReceiptLong, "txn"),
     Tile("Pending Requests", "View incoming request", Icons.Outlined.PendingActions, "pending"),
     Tile("Change UPI PIN", "Update through your bank", Icons.Outlined.Lock, "pin"),
     Tile("Saved recipients", "Favorites", Icons.Outlined.StarBorder, "saved"),
 )
 
 @Composable
-fun HomeTab(pad: PaddingValues, onOpen: (String) -> Unit) = ScreenBody(pad) {
+fun HomeTab(pad: PaddingValues, pay: Pay, onOpen: (String) -> Unit) = ScreenBody(pad) {
     Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         CometLogo()
         Spacer(Modifier.width(10.dp))
@@ -67,21 +67,24 @@ fun HomeTab(pad: PaddingValues, onOpen: (String) -> Unit) = ScreenBody(pad) {
     Gap(6)
     Text("Welcome to Comet Pay", color = Muted, fontSize = 15.sp)
     Gap(22)
-    BalanceCard()
+    BalanceCard { pay.flow = Flow.Balance; onOpen("enterpin") }
     Gap(22)
 
     tiles.chunked(2).forEachIndexed { i, row ->
         if (i > 0) Gap()
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             row.forEach { c ->
-                ActionCard(c.t, c.s, { onOpen(c.go) }) { if (c.ic == null) UpiLogo() else Glyph(c.ic) }
+                ActionCard(c.t, c.s, {
+                    // txn ko pin chahiye, isliye enterpin se jao
+                    if (c.go == "txn") { pay.flow = Flow.Transactions; onOpen("enterpin") } else onOpen(c.go)
+                }) { if (c.ic == null) UpiLogo() else Glyph(c.ic) }
             }
         }
     }
 }
 
 @Composable
-private fun BalanceCard() = Surface(
+private fun BalanceCard(onRefresh: () -> Unit) = Surface(
     onClick = {},
     modifier = Modifier.fillMaxWidth(),
     shape = RoundedCornerShape(20.dp),
@@ -92,10 +95,10 @@ private fun BalanceCard() = Surface(
         Column(Modifier.weight(1f)) {
             Text("Available Balance", color = Muted, fontSize = 14.sp)
             Gap(5)
-            Text("₹ 0.00", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text("Tap refresh to check", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
-        // chhota retry button
-        Surface(onClick = {}, shape = CircleShape, color = IconBg) {
+        // *99*3# se balance
+        Surface(onClick = onRefresh, shape = CircleShape, color = IconBg) {
             Icon(Icons.Outlined.Refresh, null, Modifier.padding(9.dp).size(20.dp), Color.White)
         }
     }

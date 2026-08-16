@@ -4,15 +4,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 
 @Composable
-fun PendingRequestsScreen(pad: PaddingValues, onBack: () -> Unit, onOpen: (String) -> Unit) = ScreenBody(pad) {
+fun PendingRequestsScreen(pad: PaddingValues, s: Setup, pay: Pay, onBack: () -> Unit, onOpen: (String) -> Unit) = ScreenBody(pad) {
+    pay.flow = Flow.Pending
     ScreenHeader("Pending Requests", onBack)
-    Note("Incoming requests waiting for your approval.")
+    Note("Fetch incoming collect requests from your bank over *99#.")
     Gap()
-    Rows(
-        listOf(
-            Triple("Request One", "test1@upi", "₹ 0"),
-            Triple("Request Two", "test2@upi", "₹ 0"),
-        ),
-        onClick = { onOpen("confirm") },
-    ) { Amount(it) }
+    Action("Fetch Pending Requests") { runUssd(pay, "", s.sim); onOpen("done") }
 }

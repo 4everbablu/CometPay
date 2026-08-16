@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun UpiPinScreen(pad: PaddingValues, s: Setup, onBack: () -> Unit, onOpen: (String) -> Unit) = ScreenBody(pad) {
+fun UpiPinScreen(pad: PaddingValues, s: Setup, pay: Pay, onBack: () -> Unit, onOpen: (String) -> Unit) = ScreenBody(pad) {
     var pin by remember { mutableStateOf("") }
     var len by remember { mutableIntStateOf(6) }
     val focus = remember { FocusRequester() }
@@ -33,6 +33,8 @@ fun UpiPinScreen(pad: PaddingValues, s: Setup, onBack: () -> Unit, onOpen: (Stri
         withFrameNanos {}
         focus.requestFocus()
     }
+    val utility = pay.flow == Flow.Balance || pay.flow == Flow.Transactions
+    val label = if (utility) "Continue" else "Pay ₹ ${pay.amount.value.ifBlank { "0" }}"
 
     ScreenHeader("Enter UPI PIN", onBack)
     ListTile(s.bankName, s.bankAcc, {}, { TileIcon(Icons.Outlined.AccountBalance) })
@@ -83,7 +85,7 @@ fun UpiPinScreen(pad: PaddingValues, s: Setup, onBack: () -> Unit, onOpen: (Stri
         },
     )
     Gap(30)
-    if (pin.length == len) Action("Pay ₹ 0") { onOpen("done") } else Ghost("Pay ₹ 0")
+    Submit(label, pin.length == len) { runUssd(pay, pin, s.sim); onOpen("done") }
     Gap(16)
     Note("Never share your UPI PIN with anyone.")
 }

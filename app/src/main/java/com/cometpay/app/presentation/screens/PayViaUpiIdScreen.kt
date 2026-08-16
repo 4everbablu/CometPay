@@ -1,19 +1,17 @@
 package com.cometpay.app.presentation.screens
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 
 @Composable
-fun PayViaUpiIdScreen(pad: PaddingValues, onBack: () -> Unit, onOpen: (String) -> Unit) = ScreenBody(pad) {
+fun PayViaUpiIdScreen(pad: PaddingValues, pay: Pay, onBack: () -> Unit, onOpen: (String) -> Unit) = ScreenBody(pad) {
+    pay.flow = Flow.SendUpi
     ScreenHeader("Pay via UPI ID", onBack)
-    Field("UPI ID", "name@bank", KeyboardType.Email)
-    Field("Amount", "₹ 0", KeyboardType.Decimal)
-    Field("Note (optional)", "What is this for?")
-    Spacer(Modifier.height(6.dp))
-    Action("Verify and Pay") { onOpen("confirm") }
+    Field("UPI ID", "name@bank", KeyboardType.Email, state = pay.payee)
+    Field("Amount", "₹ 0", KeyboardType.Decimal, state = pay.amount)
+    Field("Note (optional)", "What is this for?", state = pay.note)
+    Gap(6)
+    val ready = pay.payee.value.isNotBlank() && pay.amount.value.isNotBlank()
+    Submit("Verify and Pay", ready) { onOpen("confirm") }
 }

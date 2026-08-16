@@ -34,6 +34,9 @@ fun BankPicker(s: Setup) {
         s.bank = Banks.size
     }
     Field("Your bank name", "e.g. Federal Bank", state = s.other)
-    // likhna shuru kiya to apne aap select ho jaye
-    LaunchedEffect(s.other.value) { if (s.other.value.isNotBlank()) s.bank = Banks.size }
+    // likhna shuru kiya to apne aap select ho jaye + yaad rakho
+    LaunchedEffect(s.other.value) {
+        if (s.other.value.isNotBlank()) s.bank = Banks.size
+        s.saveOther()
+    }
 }

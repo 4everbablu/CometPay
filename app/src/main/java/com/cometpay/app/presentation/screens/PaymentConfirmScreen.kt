@@ -22,29 +22,24 @@ import androidx.compose.ui.unit.sp
 fun PaymentConfirmScreen(
     pad: PaddingValues,
     s: Setup,
+    pay: Pay,
     onBack: () -> Unit,
     onOpen: (String) -> Unit,
 ) = ScreenBody(pad) {
+    val payee = if (pay.flow == Flow.SendBank) "A/C ${pay.account.value}" else pay.payee.value
     ScreenHeader("Confirm Payment", onBack)
-    Surface(
-        Modifier.fillMaxWidth(),
-        RoundedCornerShape(20.dp),
-        CardBg,
-        border = BorderStroke(1.dp, Line),
-    ) {
+    Surface(Modifier.fillMaxWidth(), RoundedCornerShape(20.dp), CardBg, border = BorderStroke(1.dp, Line)) {
         Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.size(60.dp).background(IconBg, CircleShape), Alignment.Center) { Initial("Recipient One") }
+            Box(Modifier.size(60.dp).background(IconBg, CircleShape), Alignment.Center) { Initial(payee) }
             Gap(12)
-            Text("Recipient One", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            Gap(4)
-            Note("test1@upi")
+            Note(payee)
             Gap(16)
-            Text("₹ 0", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold)
+            Text("₹ ${pay.amount.value}", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold)
         }
     }
     Gap(16)
     Item(Icons.Outlined.AccountBalance, "Paying from", "${s.bankName} · ${s.bankAcc}") { Chevron() }
-    Item(Icons.AutoMirrored.Outlined.Notes, "Note", "-") {}
+    Item(Icons.AutoMirrored.Outlined.Notes, "Note", pay.note.value.ifBlank { "-" }) {}
     Item(Icons.Outlined.Shield, "Protected by UPI", "PIN is asked in the next step") {}
     Gap(20)
     Action("Proceed to Pay") { onOpen("enterpin") }

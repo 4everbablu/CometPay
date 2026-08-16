@@ -21,9 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 
 @Composable
 fun SettingsTab(pad: PaddingValues, s: Setup, onOpen: (String) -> Unit) = ScreenBody(pad) {
@@ -62,10 +64,15 @@ private fun Section(title: String, icon: ImageVector, content: @Composable Colum
 
 @Composable
 private fun Toggle() {
-    var on by remember { mutableStateOf(true) }
+    val ctx = LocalContext.current
+    val activity = ctx as FragmentActivity
+    var on by remember { mutableStateOf(Store.screenLock(ctx)) }
     Switch(
         on,
-        { on = it },
+        { want ->
+            // on tabhi jab device par biometric/PIN ho
+            if (!want || canLock(activity)) { on = want; Store.setScreenLock(ctx, want) }
+        },
         colors = SwitchDefaults.colors(
             checkedThumbColor = Bg,
             checkedTrackColor = Credit,

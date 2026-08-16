@@ -1,5 +1,6 @@
 package com.cometpay.app.presentation.screens
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -60,10 +61,19 @@ val Banks = listOf(
 val Sims = listOf("SIM 1 - Test Carrier" to "+91 00000 00001", "SIM 2 - Test Carrier" to "+91 00000 00002")
 
 // bank aur sim ka selection, onboarding aur app dono isi ko padhte hain
-class Setup {
-    var bank by mutableIntStateOf(0)
-    var sim by mutableIntStateOf(0)
-    val other = mutableStateOf("")
+class Setup(private val ctx: Context) {
+    private val bankState = mutableIntStateOf(Store.bank(ctx))
+    var bank: Int
+        get() = bankState.intValue
+        set(v) { bankState.intValue = v; Store.setBank(ctx, v) }
+
+    private val simState = mutableIntStateOf(Store.sim(ctx))
+    var sim: Int
+        get() = simState.intValue
+        set(v) { simState.intValue = v; Store.setSim(ctx, v) }
+
+    val other = mutableStateOf(Store.otherBank(ctx))
+    fun saveOther() = Store.setOtherBank(ctx, other.value)
 
     val custom get() = bank == Banks.size
     val bankName get() = if (custom) other.value.ifBlank { "Other bank" } else Banks[bank].first
@@ -194,39 +204,20 @@ fun Input(
 )
 
 @Composable
-fun Action(text: String, onClick: () -> Unit = {}) = Surface(
-    onClick = onClick,
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(16.dp),
-    color = Color.White,
+private fun Bar(text: String, onClick: () -> Unit, bg: Color, fg: Color, weight: FontWeight, border: BorderStroke?) = Surface(
+    onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = bg, border = border,
 ) {
-    Text(
-        text,
-        color = Bg,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.padding(vertical = 16.dp),
-    )
+    Text(text, color = fg, fontSize = 16.sp, fontWeight = weight, textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 16.dp))
 }
 
 @Composable
-fun Ghost(text: String, onClick: () -> Unit = {}) = Surface(
-    onClick = onClick,
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(16.dp),
-    color = CardBg,
-    border = BorderStroke(1.dp, Line),
-) {
-    Text(
-        text,
-        color = Color.White,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.SemiBold,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.padding(vertical = 16.dp),
-    )
-}
+fun Action(text: String, onClick: () -> Unit = {}) = Bar(text, onClick, Color.White, Bg, FontWeight.Bold, null)
+
+@Composable
+fun Ghost(text: String, onClick: () -> Unit = {}) = Bar(text, onClick, CardBg, Color.White, FontWeight.SemiBold, BorderStroke(1.dp, Line))
+
+@Composable
+fun Submit(text: String, ready: Boolean, onClick: () -> Unit) = if (ready) Action(text, onClick) else Ghost(text)
 
 // select karne wali row, tick lagta hai
 @Composable
